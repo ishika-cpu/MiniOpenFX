@@ -41,11 +41,11 @@ depositRoutes.post("/", async (c) => {
                 : amount,
         });
     } catch (e: any) {
-        console.error("Deposit failed:", e);
+        console.error("Deposit failed 1:", e);
         // Determine if it's a Zod error or other
         if (e.issues) {
             return c.json({ error: "Invalid input", details: e.issues }, 400);
         }
-        return c.json({ error: "Deposit failed" }, 500);
+        return c.json({ error: "Deposit failed 0" }, 500);
     }
 });

@@ -4,13 +4,13 @@ import { clientsService } from "../../services/clients/clients.service.js";
 import { auth } from "../middleware/auth.js";
 import { pricesRoutes } from "./prices.routes.js";
 import { quotesRoutes } from "./quotes.routes.js";
-import { tradesRoutes } from "./trades.routes.js";
+import tradesRoutes from "./trades.routes.js";
 import { balancesRoutes } from "./balances.routes.js";
 import { depositRoutes } from "./deposit.routes.js";
 import { clientsRoutes } from "./clients.routes.js";
 
 
-export const v1Routes = new Hono();
+const v1Routes = new Hono();
 
 // Public routes (Admin protected)
 v1Routes.route("/clients", clientsRoutes);
@@ -37,3 +37,5 @@ v1Routes.route("/quotes", quotesRoutes);
 v1Routes.route("/trades", tradesRoutes);
 v1Routes.route("/balances", balancesRoutes);
 v1Routes.route("/deposit", depositRoutes);
+
+export default v1Routes

@@ -8,7 +8,7 @@ import { badRequest } from "../../domain/errors.js";
 import { fromMinorUnits } from "../../domain/money.js";
 import { tradingService } from "../../services/trading/trading.service.js";
 
-export const tradesRoutes = new Hono();
+const tradesRoutes = new Hono();
 
 //pagination limits
 const DEFAULT_LIMIT = 50;
@@ -60,9 +60,10 @@ function buildCursor(row: any) {
 // delegates the business logic to the trading service.
 tradesRoutes.post("/", async (c) => {
   const bodySchema = z.object({
-    quote_id: z.string().uuid(),
+    quote_id: z.uuid(),
   });
-  const body = bodySchema.parse(await c.req.json());
+  const rawBody = await c.req.json()
+  const body = bodySchema.parse(rawBody)
   const quoteId = body.quote_id;
 
   const idempotencyKey =
@@ -114,3 +115,5 @@ tradesRoutes.get("/", async (c) => {
     next_cursor: nextCursor,
   });
 });
+
+export default tradesRoutes
