@@ -14,20 +14,6 @@ MiniOpenFX is a trading system where:
 3. **Execute trades** based on those quotes
 4. Everything is tracked with a **double-entry ledger** (like a bank's accounting system)
 
-It's built to demonstrate how modern trading APIs work under the hood.
-
----
-
-## Quick Start
-
-### Prerequisites
-- **Node.js 20+**
-- **PostgreSQL** database (or use [Neon](https://neon.tech) for free cloud Postgres)
-- **pnpm** package manager
-
-### Installation
-
-```bash
 # Clone the repo
 git clone https://github.com/ishika-cpu/MiniOpenFX.git
 cd MiniOpenFX
@@ -37,7 +23,6 @@ pnpm install
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env and add your DATABASE_URL and API_KEY
 
 # Run database migrations
 pnpm db:migrate
@@ -210,9 +195,9 @@ The tests use Node's native test runner (no heavy frameworks needed).
 ### Assumptions Made
 
 - **Single Currency Pairs**: Only supports BTCUSDT, ETHUSDT, EURUSDT
-- **Quote time**: 30 seconds
-- **No Order Books**: We use market prices, not limit orders
-- **Trust the Pricing API**: We assume CoinGecko prices are accurate
+- **Quote time**: 30 seconds(hardcoded)
+- **No Order Books**: Using market prices, not limit orders
+- **Trust the Pricing API**: Assuming CoinGecko prices are accurate
 
 ### Database Schema
 
