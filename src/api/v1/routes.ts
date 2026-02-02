@@ -1,3 +1,4 @@
+//root router
 import { Hono } from "hono";
 import { clientsService } from "../../services/clients/clients.service.js";
 import { auth } from "../middleware/auth.js";

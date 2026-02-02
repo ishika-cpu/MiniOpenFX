@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import { pricingService } from "../pricing/pricing.service.js";
-import { parseBinanceSymbol } from "../../config/symbols.js";
+import { parseSymbol } from "../../config/symbols.js";
 import type { SupportedSymbol } from "../../config/symbols.js";
 import { toMinorUnits } from "../../domain/money.js";
 import { badRequest } from "../../domain/errors.js";
@@ -30,7 +30,7 @@ export type QuoteComputed = {
 
 export class QuotingService {
   async createQuote(input: CreateQuoteInput): Promise<QuoteComputed> {
-    const { baseCurrency, quoteCurrency } = parseBinanceSymbol(input.symbol);
+    const { baseCurrency, quoteCurrency } = parseSymbol(input.symbol);
 
     const indicative = await pricingService.getIndicativePrice(input.symbol);
 
@@ -68,4 +68,4 @@ export class QuotingService {
 }
 
 export const quotingService = new QuotingService();
-    
+

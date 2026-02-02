@@ -1,12 +1,12 @@
 import type { MiddlewareHandler } from "hono";
-import { db } from "../../db/client.js";
-import { clients } from "../../db/schema.js";
-import { desc, eq } from "drizzle-orm";
-import { verifyApiKey } from "../../domain/hash.js";
+import { db } from "../../db/client.js"; //database connection
+import { clients } from "../../db/schema.js";//table defn.
+import { desc, eq } from "drizzle-orm";//sql helpers
+import { verifyApiKey } from "../../domain/hash.js";//compares hashed and plaintext secret
 
 
-declare module "hono" {
-  interface ContextVariableMap {
+declare module "hono" { 
+  interface ContextVariableMap { //type safety for clientId for every request context
     clientId: string;
   }
 }
@@ -31,13 +31,13 @@ export function auth(): MiddlewareHandler {
           401
         );
       }
-      secret = secretPart;
-      [client] = await db
+      secret = secretPart;//after the .
+      [client] = await db//select client from clients table where apiKeyId matches
         .select()
         .from(clients)
-        .where(eq(clients.apiKeyId, apiKeyId))
-        .limit(1);
-    } else {
+        .where(eq(clients.apiKeyId, apiKeyId))//where apiKeyId matches
+        .limit(1);//SELECT * FROM clients WHERE api_key_id = ? LIMIT 1;
+    } else {//no .
       // Back-compat: accept a single token and match against the latest client
       [client] = await db
         .select()
@@ -49,12 +49,12 @@ export function auth(): MiddlewareHandler {
       return c.json({ error: { code: "UNAUTHORIZED", message: "Invalid API key" } }, 401);
     }
 
-    const ok = await verifyApiKey(secret, client.apiKeyHash);
+    const ok = await verifyApiKey(secret, client.apiKeyHash);//verify secret hash matches
     if (!ok) {
       return c.json({ error: { code: "UNAUTHORIZED", message: "Invalid API key" } }, 401);
     }
 
-    c.set("clientId", client.id);
+    c.set("clientId", client.id);//set clientId in context, every route knows who the client is
     await next();
   };
 }

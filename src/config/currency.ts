@@ -1,4 +1,4 @@
-export const CURRENCY_SCALE: Record<string, number> = {
+export const CURRENCY_SCALE: Record<string, number> = {//s a TypeScript type that means:“an object whose keys are strings and whose values are numbers”
   USDT: 6,
   BTC: 8,
   ETH: 18,

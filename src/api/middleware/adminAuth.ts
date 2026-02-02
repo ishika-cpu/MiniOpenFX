@@ -1,24 +1,18 @@
-import type { MiddlewareHandler } from "hono";
+import type { MiddlewareHandler } from "hono";//type middleware function
 
-export function adminAuth(): MiddlewareHandler {
-    return async (c, next) => {
-        const header = c.req.header("authorization") ?? "";
-        const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-
+export function adminAuth(): MiddlewareHandler { //returns a middleware
+    return async (c, next) => {//is the middleware itself
+        const header = c.req.header("authorization") ?? "";//if undefined or null return empty string
+        const token = header.startsWith("Bearer ") ? header.slice(7) : "";//if starts with Bearer then return the token
         const adminKey = process.env.API_KEY;
 
         if (!adminKey) {
-            // Fail authentication if no admin key is configured
-            console.error("ADMIN AUTH: No API_KEY configured in environment.");
-            return c.json({ error: { code: "INTERNAL_ERROR", message: "Server configuration error" } }, 500);
+            console.warn("API_KEY not set in environment");
+            return c.json({ error: "Server configuration error" }, 500);
         }
 
-        // DEBUG LOGGING
-        console.log(`[AdminAuth] Expected: ${adminKey}, Received: ${token}`);
-
         if (!token || token !== adminKey) {
-            console.log("[AdminAuth] Auth failed");
-            return c.json({ error: { code: "UNAUTHORIZED", message: "Invalid Admin API key" } }, 401);
+            return c.json({ error: "Unauthorized: Invalid admin key" }, 401);
         }
 
         await next();

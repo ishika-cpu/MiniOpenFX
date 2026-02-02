@@ -10,9 +10,11 @@ import { tradingService } from "../../services/trading/trading.service.js";
 
 export const tradesRoutes = new Hono();
 
+//pagination limits
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 
+//helper to convert db values to bigint
 function asBigInt(v: unknown): bigint {
   if (typeof v === "bigint") return v;
   if (typeof v === "number") return BigInt(v);
@@ -20,6 +22,7 @@ function asBigInt(v: unknown): bigint {
   throw new Error(`Expected bigint-compatible value, got ${typeof v}`);
 }
 
+//helper to format trade response
 function formatTrade(row: any) {
   return {
     trade_id: row.id,
@@ -36,6 +39,7 @@ function formatTrade(row: any) {
   };
 }
 
+//helper to parse cursor
 function parseCursor(cursor: string) {
   const parts = cursor.split("_");
   if (parts.length !== 2) return null;
@@ -45,6 +49,7 @@ function parseCursor(cursor: string) {
   return { createdAt, id };
 }
 
+//helper to build cursor
 function buildCursor(row: any) {
   const createdAt = new Date(row.createdAt).toISOString();
   return `${createdAt}_${row.id}`;
@@ -79,7 +84,7 @@ tradesRoutes.get("/", async (c) => {
   const limit = Math.min(Math.max(limitParam, 1), MAX_LIMIT);
   const cursor = c.req.query("cursor");
 
-  const conditions: SQL[] = [eq(trades.clientId, clientId)];
+  const conditions: SQL[] = [eq(trades.clientId, clientId)];//only trades for this client
   if (cursor) {
     const parsed = parseCursor(cursor);
     if (!parsed) throw badRequest("Invalid cursor");

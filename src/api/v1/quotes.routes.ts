@@ -20,6 +20,7 @@ function asBigInt(v: unknown): bigint {
   throw new Error(`Expected bigint-compatible value, got ${typeof v}`);
 }
 
+//Helper to format quote response. Takes DB row and returns API response format
 function formatQuote(row: any) {
   return {
     quote_id: row.id,
@@ -27,9 +28,9 @@ function formatQuote(row: any) {
     side: row.side,
     base_currency: row.baseCurrency,
     quote_currency: row.quoteCurrency,
-    base_amount: fromMinorUnits(asBigInt(row.baseAmountMinor), row.baseCurrency),
+    base_amount: fromMinorUnits(asBigInt(row.baseAmountMinor), row.baseCurrency),//convert to decimal string
     price: row.price,
-    quote_amount: fromMinorUnits(asBigInt(row.quoteAmountMinor), row.quoteCurrency),
+    quote_amount: fromMinorUnits(asBigInt(row.quoteAmountMinor), row.quoteCurrency),//convert to decimal string
     status: row.status,
     expires_at: row.expiresAt,
     created_at: row.createdAt,
@@ -43,9 +44,9 @@ quotesRoutes.post("/", async (c) => {
     base_amount: z.string(),
   });
 
-  const body = bodySchema.parse(await c.req.json());
+  const body = bodySchema.parse(await c.req.json());//parse and validate json request body
 
-  const symbol = body.symbol.toUpperCase();
+  const symbol = body.symbol.toUpperCase();//convert to uppercase
   if (!isSupportedSymbol(symbol)) throw badRequest("Unsupported symbol", { symbol });
 
   const clientId = c.get("clientId") as string;
@@ -56,6 +57,7 @@ quotesRoutes.post("/", async (c) => {
     baseAmount: body.base_amount,
   });
 
+  //insert quote into db
   const row = await insertQuote({
     clientId,
     symbol: computed.symbol,
@@ -72,7 +74,7 @@ quotesRoutes.post("/", async (c) => {
   return c.json(formatQuote(row));
 });
 
-// ✅ GET /v1/quotes/:id (marks ACTIVE -> EXPIRED if past expires_at)
+//GET /v1/quotes/:id (marks ACTIVE -> EXPIRED if past expires_at)
 quotesRoutes.get("/:id", async (c) => {
   const id = c.req.param("id");
   const clientId = c.get("clientId") as string;
@@ -82,7 +84,7 @@ quotesRoutes.get("/:id", async (c) => {
 
   const now = new Date();
 
-  // If expired AND still ACTIVE, flip to EXPIRED
+  //If expired AND still ACTIVE, flip to EXPIRED
   if (quote.status === "ACTIVE" && now >= new Date(quote.expiresAt)) {
     const updated = await markQuoteExpired({ clientId, quoteId: id });
     if (updated) quote = updated;
