@@ -1,11 +1,11 @@
-import type { PricingProvider, IndicativePrice } from "./types.js"; // Import types for the pricing infrastructure
-import { CoingeckoPricingProvider } from "./coingecko.provider.js"; // Import the default CoinGecko pricing provider
-import { isSupportedSymbol } from "../../config/symbols.js"; // Import validator for trading symbols
-import { badRequest } from "../../domain/errors.js"; // Import standard error for invalid parameters
-import type { SupportedSymbol } from "../../config/symbols.js"; // Import the union type for allowed symbols
+import type { PricingProvider, IndicativePrice } from "./types.js"; 
+import { CoingeckoPricingProvider } from "./coingecko.provider.js"; 
+import { isSupportedSymbol } from "../../config/symbols.js"; 
+import { badRequest } from "../../domain/errors.js"; 
+import type { SupportedSymbol } from "../../config/symbols.js"; 
 
 export class PricingService { // Wrapper service that coordinates pricing providers
-  constructor(private provider: PricingProvider = new CoingeckoPricingProvider()) { } // Initialize with a provider (defaults to CoinGecko)
+  constructor(private provider: PricingProvider = new CoingeckoPricingProvider()) { }
 
   async getIndicativePrice(symbolRaw: string): Promise<IndicativePrice> { // Public method to get a price for a string symbol
     const symbol = symbolRaw.toUpperCase(); // Normalize symbol to uppercase for consistent matching

@@ -6,7 +6,7 @@ import { errorHandler } from "./api/errorHandler.js";
 export const app = new Hono();
 
 app.use("*", requestId());
-// app.use("*", errorHandler()); deprecated
+// app.use("*", errorHandler()); illegal 
 
 app.get("/", (c) => c.text("MiniOpenFX is running! 🚀"));
 app.get("/health", (c) => c.json({ ok: true, status: "up" }));

@@ -1,22 +1,22 @@
-import { db } from "../../db/client.js"; // Import the main database connection
-import { balances, quotes, trades } from "../../db/schema.js"; // Import database table definitions
-import { and, eq, or, sql } from "drizzle-orm"; // Import Drizzle SQL operator helpers
-import { badRequest, notFound } from "../../domain/errors.js"; // Import custom application error types
-import { ledgerService } from "../ledger/ledger.service.js"; // Import ledger service for balance updates
+import { db } from "../../db/client.js"; 
+import { balances, quotes, trades } from "../../db/schema.js"; 
+import { and, eq, or, sql } from "drizzle-orm"; 
+import { badRequest, notFound } from "../../domain/errors.js"; 
+import { ledgerService } from "../ledger/ledger.service.js"; 
 
 /** Convert a string/number/bigint into a bigint */
-function asBigInt(v: unknown): bigint { // Helper to ensure values are treated as large integers
-  if (typeof v === "bigint") return v; // Already a bigint, return as is
-  if (typeof v === "number") return BigInt(v); // Convert number to bigint
-  if (typeof v === "string") return BigInt(v); // Parse string as bigint
-  throw new Error(`Expected bigint-compatible value, got ${typeof v}`); // Error if type is incompatible
+function asBigInt(v: unknown): bigint { 
+  if (typeof v === "bigint") return v;  
+  if (typeof v === "number") return BigInt(v); 
+  if (typeof v === "string") return BigInt(v); 
+  throw new Error(`Expected bigint-compatible value, got ${typeof v}`); 
 }
 
 export class TradingService { // Service containing core trade execution logic
   async executeTrade(clientId: string, quoteId: string, idempotencyKey: string) { // Main trade execution entry point
     return db.transaction(async (tx) => { // Start a database transaction for atomicity
       // Idempotency check: return existing trade if idempotencyKey used before
-      const [existing] = await tx // Check if this request was already processed
+      const [existing] = await tx
         .select() // Select columns
         .from(trades) // From the trades history table
         .where(and(eq(trades.clientId, clientId), eq(trades.idempotencyKey, idempotencyKey))) // Match client and unique key
@@ -38,32 +38,32 @@ export class TradingService { // Service containing core trade execution logic
         .for("update");
 
       const [quote] = await tx // Fetch the finalized quote data
-        .select() // Select all columns
-        .from(quotes) // From the quotes table
-        .where(and(eq(quotes.id, quoteId), eq(quotes.clientId, clientId))) // Filter by ID and owner
-        .limit(1); // Only one row expected
+        .select() 
+        .from(quotes) 
+        .where(and(eq(quotes.id, quoteId), eq(quotes.clientId, clientId))) 
+        .limit(1); 
       if (!quote) { // If no quote is found
-        throw notFound("Quote not found", { quote_id: quoteId }); // Return 404 error
+        throw notFound("Quote not found", { quote_id: quoteId }); 
       }
 
       // Ensure no trade already exists for this quote
       const [tradeForQuote] = await tx // One final check to ensure the quote hasn't been used
-        .select() // Select columns
-        .from(trades) // From trades table
-        .where(and(eq(trades.clientId, clientId), eq(trades.quoteId, quoteId))) // Match client and quote
-        .limit(1); // One row check
+        .select() 
+        .from(trades)   
+        .where(and(eq(trades.clientId, clientId), eq(trades.quoteId, quoteId))) 
+        .limit(1); 
       if (tradeForQuote) { // If quote was already used by a different request
         await tx // Cleanup: ensure quote status is correct
-          .update(quotes) // Update quote status
+          .update(quotes) 
           .set({ status: "EXECUTED" }) // Mark as executed
           .where(and(eq(quotes.id, quoteId), eq(quotes.clientId, clientId))); // Target specific quote
         throw badRequest("Quote already executed", { quote_id: quoteId }); // Error if reused
       }
 
       // Validate quote status and expiry
-      if (quote.status === "EXECUTED") throw badRequest("Quote already executed", { quote_id: quoteId }); // Reject if already done
-      if (quote.status === "EXPIRED") throw badRequest("Quote expired", { quote_id: quoteId }); // Reject if too late
-      if (quote.status !== "ACTIVE") throw badRequest("Quote not active", { status: quote.status }); // Reject if in weird state
+      if (quote.status === "EXECUTED") throw badRequest("Quote already executed", { quote_id: quoteId });
+      if (quote.status === "EXPIRED") throw badRequest("Quote expired", { quote_id: quoteId }); 
+      if (quote.status !== "ACTIVE") throw badRequest("Quote not active", { status: quote.status }); 
       const now = new Date(); // Get current timestamp
       if (now >= new Date(quote.expiresAt)) { // Check if time has run out
         await tx // Perform update
@@ -110,37 +110,37 @@ export class TradingService { // Service containing core trade execution logic
           clientId, // Link to client
           quoteId: quote.id, // Link to originating quote
           symbol: quote.symbol, // Record symbol
-          side: quote.side, // Record direction
-          baseCurrency: quote.baseCurrency, // Record base asset
-          quoteCurrency: quote.quoteCurrency, // Record quote asset
-          baseAmountMinor, // Record final base quantity
-          quoteAmountMinor, // Record final quote quantity
-          price: quote.price, // Record execution price
-          status: "FILLED", // Set initial status to FILLED
-          idempotencyKey, // Record the unique request key
+          side: quote.side, 
+          baseCurrency: quote.baseCurrency, 
+          quoteCurrency: quote.quoteCurrency, 
+          baseAmountMinor, 
+          quoteAmountMinor, 
+          price: quote.price, 
+          status: "FILLED", 
+          idempotencyKey, 
         })
-        .returning(); // Get the created record back
+        .returning(); 
 
       // Update balances and ledger entries via the ledger service
       await ledgerService.updateBalancesAndLedger( // Delegate the complex accounting to LedgerService
-        tx, // Pass the active transaction
-        clientId, // Target client
-        debitCurrency, // asset out
-        debitAmount, // quantity out
-        creditCurrency, // asset in
-        creditAmount, // quantity in
-        createdTrade.id, // Link to the trade ID for history
+        tx, 
+        clientId, 
+        debitCurrency, 
+        debitAmount, 
+        creditCurrency, 
+        creditAmount, 
+        createdTrade.id, 
       );
 
       // Mark the quote as executed
-      await tx // Update quote status one last time
-        .update(quotes) // Target quotes table
-        .set({ status: "EXECUTED" }) // Set state to EXECUTED
-        .where(and(eq(quotes.id, quoteId), eq(quotes.clientId, clientId))); // Target originating quote
+      await tx 
+        .update(quotes) 
+        .set({ status: "EXECUTED" }) 
+        .where(and(eq(quotes.id, quoteId), eq(quotes.clientId, clientId))); 
 
-      return createdTrade; // Return the final trade details
+      return createdTrade; 
     }); // Commit transaction
   }
 }
 
-export const tradingService = new TradingService(); // Export a singleton service instance
+export const tradingService = new TradingService(); 
